@@ -1,15 +1,34 @@
 package com.example.supportPortal.resource;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.supportPortal.exceptions.domain.EmailExistException;
+import com.example.supportPortal.exceptions.domain.ExceptionHandling;
+import com.example.supportPortal.exceptions.domain.UserNameExistException;
+import com.example.supportPortal.exceptions.domain.UserNotFoundException;
+import com.example.supportPortal.model.User;
+import com.example.supportPortal.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import javax.mail.MessagingException;
+
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping(value="/user")
-public class UserResource {
+@RequestMapping(path = {"/","/user"})
+public class UserResource extends ExceptionHandling {
+    private UserService userService;
 
-    @GetMapping(value = "/home")
-    public String showUser(){
-        return "application works";
+    @Autowired
+    public UserResource(UserService userService) {
+        this.userService = userService;
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<User> register(@RequestBody User user) throws UserNotFoundException, UserNameExistException, EmailExistException, MessagingException {
+        User newUser = userService.register(user.getFirstName(), user.getLastName(), user.getUserName(), user.getEmail());
+        return new ResponseEntity<>(newUser, OK);
+    }
+
 }
