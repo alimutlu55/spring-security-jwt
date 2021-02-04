@@ -4,14 +4,13 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.example.supportPortal.model.UserPricipal;
+import com.example.supportPortal.model.UserPrincipal;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 
@@ -30,11 +29,11 @@ public class JWTTokenProvider {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String generateJwtToken(UserPricipal userPricipal){
-        String[] claims = getClaimsFromUser(userPricipal);
+    public String generateJwtToken(UserPrincipal userPrincipal){
+        String[] claims = getClaimsFromUser(userPrincipal);
         return JWT.create().withIssuer(GET_ARRAYS_LLC).withAudience(GET_ARRAYS_ADMINISTRATION)
                 .withIssuedAt(new Date())
-                .withSubject(userPricipal.getUsername())
+                .withSubject(userPrincipal.getUsername())
                 .withArrayClaim(AUTHORITIES,claims)
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(secret.getBytes()));
@@ -84,7 +83,7 @@ public class JWTTokenProvider {
         return verifier;
     }
 
-    private String[] getClaimsFromUser(UserPricipal user) {
+    private String[] getClaimsFromUser(UserPrincipal user) {
         List<String> authorities = new ArrayList<>();
         for(GrantedAuthority grantedAuthority: user.getAuthorities()){
             authorities.add(grantedAuthority.getAuthority());

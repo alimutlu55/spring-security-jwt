@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 
-public class UserPricipal implements UserDetails {
+public class UserPrincipal implements UserDetails {
 
     private User user;
 
-    public UserPricipal(User user) {
+    public UserPrincipal(User user) {
         this.user = user;
     }
 

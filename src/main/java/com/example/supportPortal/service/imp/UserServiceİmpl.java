@@ -5,8 +5,9 @@ import com.example.supportPortal.exceptions.domain.EmailExistException;
 import com.example.supportPortal.exceptions.domain.UserNameExistException;
 import com.example.supportPortal.exceptions.domain.UserNotFoundException;
 import com.example.supportPortal.model.User;
-import com.example.supportPortal.model.UserPricipal;
+import com.example.supportPortal.model.UserPrincipal;
 import com.example.supportPortal.repository.UserRepository;
+import com.example.supportPortal.service.LoginAttemptService;
 import com.example.supportPortal.service.UserService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -37,11 +38,13 @@ public class UserServiceİmpl implements UserService, UserDetailsService {
     private Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
+    private LoginAttemptService loginAttemptService;
 
     @Autowired
-    public UserServiceİmpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceİmpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, LoginAttemptService loginAttemptService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.loginAttemptService = loginAttemptService;
     }
     @Override
     public List<User> getUsers() {
@@ -82,16 +85,29 @@ public class UserServiceİmpl implements UserService, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByUserName(username);
-        if(user == null){
+        if (user == null) {
             LOGGER.error(NO_USER_FOUND_BY_USERNAME + username);
             throw new UsernameNotFoundException(NO_USER_FOUND_BY_USERNAME + username);
-        }else {
+        } else {
+            validateLoginAttempt(user);
             user.setLastLoginDateDisplay(user.getLastLoginDate());
             user.setLastLoginDate(new Date());
             userRepository.save(user);
-            UserPricipal userPricipal = new UserPricipal(user);
+            UserPrincipal userPrincipal = new UserPrincipal(user);
             LOGGER.info(FOUND_USER_BY_USERNAME + username);
-            return userPricipal;
+            return userPrincipal;
+        }
+    }
+
+    private void validateLoginAttempt(User user) {
+        if(user.isNotLocked()) {
+            if(loginAttemptService.hasExceededMaxAttempts(user.getUserName())) {
+                user.setNotLocked(false);
+            } else {
+                user.setNotLocked(true);
+            }
+        } else {
+            loginAttemptService.evictUserFromLoginAttemptCache(user.getUserName());
         }
     }
 
