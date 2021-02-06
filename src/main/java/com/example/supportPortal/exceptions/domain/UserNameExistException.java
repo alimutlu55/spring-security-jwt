@@ -1,7 +1,7 @@
 package com.example.supportPortal.exceptions.domain;
 
-public class UserNameExistException extends Exception {
-    public UserNameExistException(String message) {
+public class UsernameExistException extends Exception {
+    public UsernameExistException(String message) {
         super(message);
     }
 }
